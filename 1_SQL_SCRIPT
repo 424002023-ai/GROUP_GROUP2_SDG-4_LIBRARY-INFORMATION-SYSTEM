@@ -1,0 +1,31 @@
+1.1_DDL_Schema.sql
+
+CREATE TABLE books
+CREATE TABLE borrowings
+CREATE TABLE categories
+CREATE TABLE inventory
+CREATE TABLE members
+Index statements (ALTER TABLE ... ADD PRIMARY KEY, etc.)
+Constraints (FOREIGN KEY relationships)
+
+1.2_DML_TestData.sql
+
+INSERT INTO books ...
+INSERT INTO categories ...
+INSERT INTO inventory ...
+INSERT INTO members ...
+INSERT INTO borrowings ...
+
+1.3_StoredLogic.sql
+
+Stored Procedure borrow_book
+Trigger trg_no_negative_inventory
+All views (v_category_demand, v_most_borrowed, v_overdue_members)
+
+1.4_DCL_Users.sql
+
+CREATE USER 'librarian'@'%' IDENTIFIED BY 'Lib2024!';
+GRANT SELECT, INSERT, UPDATE, DELETE ON library_sdg4.* TO 'librarian'@'%';
+CREATE USER 'viewer'@'%' IDENTIFIED BY 'Viewer2024!';
+GRANT SELECT ON library_sdg4.* TO 'viewer'@'%';
+FLUSH PRIVILEGES;
