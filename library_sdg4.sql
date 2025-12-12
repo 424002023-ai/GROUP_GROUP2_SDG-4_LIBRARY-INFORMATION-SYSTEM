@@ -1,0 +1,377 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Dec 05, 2025 at 04:02 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.0.30
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `library_sdg4`
+--
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `borrow_book` (IN `p_member` INT, IN `p_book` INT, IN `p_days` INT)   BEGIN
+    DECLARE copies INT DEFAULT 0;
+
+    START TRANSACTION;
+
+    SELECT available_copies INTO copies
+    FROM Inventory
+    WHERE book_id = p_book
+    FOR UPDATE;
+
+    IF copies < 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No available copies.';
+    END IF;
+
+    INSERT INTO Borrowings (member_id, book_id, date_borrowed, due_date)
+    VALUES (p_member, p_book, CURDATE(), DATE_ADD(CURDATE(), INTERVAL p_days DAY));
+
+    UPDATE Inventory
+    SET available_copies = available_copies - 1
+    WHERE book_id = p_book;
+
+    COMMIT;
+END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `books`
+--
+
+CREATE TABLE `books` (
+  `book_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `author` varchar(150) NOT NULL,
+  `category_id` int(11) NOT NULL,
+  `published_year` int(11) NOT NULL CHECK (`published_year` >= 1800),
+  `isbn` varchar(20) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `books`
+--
+
+INSERT INTO `books` (`book_id`, `title`, `author`, `category_id`, `published_year`, `isbn`) VALUES
+(1, 'Foundations of Education', 'Maria Santos', 1, 2015, '978000000001'),
+(2, 'Basic Science for Learners', 'John Ruiz', 2, 2018, '978000000002'),
+(3, 'Technology in the Modern World', 'A. Villanueva', 3, 2020, '978000000003'),
+(4, 'Algebra for Beginners', 'D. Marquez', 4, 2012, '978000000004'),
+(5, 'World History Overview', 'L. Dominguez', 5, 2010, '978000000005'),
+(6, 'Community Health Basics', 'Erika Chua', 6, 2019, '978000000006'),
+(7, 'Filipino Short Stories', 'Jose Dela Cruz', 7, 2005, '978000000007'),
+(8, 'Environmental Awareness for Youth', 'K. Ledesma', 8, 2021, '978000000008'),
+(9, 'Introduction to Sociology', 'M. Ortega', 9, 2016, '978000000009'),
+(10, 'English Grammar Essentials', 'P. Navarro', 10, 2017, '978000000010'),
+(11, 'Advanced Mathematics I', 'J. Lim', 4, 2014, '978000000011'),
+(12, 'Computer Literacy', 'B. Santos', 3, 2022, '978000000012'),
+(13, 'Educational Psychology', 'R. Cabral', 1, 2013, '978000000013'),
+(14, 'General Biology', 'C. Fernandez', 2, 2011, '978000000014'),
+(15, 'Environmental Science 101', 'A. Cruz', 8, 2019, '978000000015'),
+(16, 'Philippine Literature Classics', 'C. David', 7, 2000, '978000000016'),
+(17, 'Basic First Aid Practices', 'Dr. R. Mercado', 6, 2018, '978000000017'),
+(18, 'Modern World Geography', 'E. Ramirez', 9, 2013, '978000000018'),
+(19, 'Spanish for Beginners', 'O. Reyes', 10, 2014, '978000000019'),
+(20, 'Science Experiments for Kids', 'H. Tan', 2, 2017, '978000000020');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `borrowings`
+--
+
+CREATE TABLE `borrowings` (
+  `borrow_id` int(11) NOT NULL,
+  `member_id` int(11) NOT NULL,
+  `book_id` int(11) NOT NULL,
+  `date_borrowed` date NOT NULL,
+  `due_date` date NOT NULL,
+  `date_returned` date DEFAULT NULL
+) ;
+
+--
+-- Dumping data for table `borrowings`
+--
+
+INSERT INTO `borrowings` (`borrow_id`, `member_id`, `book_id`, `date_borrowed`, `due_date`, `date_returned`) VALUES
+(1, 1, 1, '2024-02-01', '2024-02-15', '2024-02-14'),
+(2, 2, 4, '2024-02-10', '2024-02-24', '2024-02-23'),
+(3, 3, 7, '2024-02-14', '2024-02-28', '2024-03-01'),
+(4, 4, 9, '2024-02-20', '2024-03-05', NULL),
+(5, 5, 2, '2024-03-01', '2024-03-15', '2024-03-14'),
+(6, 6, 3, '2024-03-02', '2024-03-16', NULL),
+(7, 7, 12, '2024-03-03', '2024-03-17', NULL),
+(8, 8, 10, '2024-03-05', '2024-03-19', '2024-03-18'),
+(9, 9, 11, '2024-03-06', '2024-03-20', NULL),
+(10, 10, 14, '2024-03-10', '2024-03-24', NULL),
+(11, 11, 16, '2024-03-12', '2024-03-26', '2024-03-25'),
+(12, 12, 5, '2024-03-13', '2024-03-27', NULL),
+(13, 13, 6, '2024-03-14', '2024-03-28', NULL),
+(14, 14, 13, '2024-03-16', '2024-03-30', NULL),
+(15, 15, 8, '2024-03-18', '2024-04-01', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `categories`
+--
+
+CREATE TABLE `categories` (
+  `category_id` int(11) NOT NULL,
+  `category_name` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `categories`
+--
+
+INSERT INTO `categories` (`category_id`, `category_name`) VALUES
+(1, 'Education'),
+(8, 'Environment'),
+(6, 'Health'),
+(5, 'History'),
+(10, 'Languages'),
+(7, 'Literature'),
+(4, 'Mathematics'),
+(2, 'Science'),
+(9, 'Social Studies'),
+(3, 'Technology');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `inventory`
+--
+
+CREATE TABLE `inventory` (
+  `inventory_id` int(11) NOT NULL,
+  `book_id` int(11) NOT NULL,
+  `total_copies` int(11) NOT NULL CHECK (`total_copies` >= 0),
+  `available_copies` int(11) NOT NULL CHECK (`available_copies` >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `inventory`
+--
+
+INSERT INTO `inventory` (`inventory_id`, `book_id`, `total_copies`, `available_copies`) VALUES
+(1, 1, 4, 4),
+(2, 2, 5, 5),
+(3, 3, 3, 3),
+(4, 4, 4, 4),
+(5, 5, 2, 2),
+(6, 6, 3, 3),
+(7, 7, 5, 5),
+(8, 8, 3, 3),
+(9, 9, 4, 4),
+(10, 10, 5, 5),
+(11, 11, 4, 4),
+(12, 12, 3, 3),
+(13, 13, 2, 2),
+(14, 14, 4, 4),
+(15, 15, 3, 3),
+(16, 16, 5, 5),
+(17, 17, 3, 3),
+(18, 18, 4, 4),
+(19, 19, 5, 5),
+(20, 20, 3, 3);
+
+--
+-- Triggers `inventory`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_no_negative_inventory` BEFORE UPDATE ON `inventory` FOR EACH ROW BEGIN
+    IF NEW.available_copies < 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error: Inventory cannot go negative.';
+    END IF;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `members`
+--
+
+CREATE TABLE `members` (
+  `member_id` int(11) NOT NULL,
+  `full_name` varchar(150) NOT NULL,
+  `address` varchar(150) NOT NULL,
+  `date_registered` date NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `members`
+--
+
+INSERT INTO `members` (`member_id`, `full_name`, `address`, `date_registered`) VALUES
+(1, 'Ana Villanueva', 'Barangay 1', '2024-01-05'),
+(2, 'Mark Santos', 'Barangay 2', '2024-01-10'),
+(3, 'Liza Rodriguez', 'Barangay 3', '2024-01-12'),
+(4, 'John Michael Cruz', 'Barangay 4', '2024-02-01'),
+(5, 'Paula Dizon', 'Barangay 5', '2024-02-07'),
+(6, 'Kylie Ramirez', 'Barangay 1', '2024-02-14'),
+(7, 'Christian Mendez', 'Barangay 2', '2024-03-01'),
+(8, 'Danielle Soriano', 'Barangay 3', '2024-03-04'),
+(9, 'Ramon Yulo', 'Barangay 4', '2024-03-07'),
+(10, 'Julia Gomez', 'Barangay 5', '2024-03-10'),
+(11, 'Patrick Mendoza', 'Barangay 1', '2024-03-11'),
+(12, 'Sophia Cruz', 'Barangay 2', '2024-03-12'),
+(13, 'Rica Bautista', 'Barangay 3', '2024-03-15'),
+(14, 'Daniel Lim', 'Barangay 4', '2024-03-19'),
+(15, 'Joshua Chiu', 'Barangay 5', '2024-03-20'),
+(16, 'Nina Castillo', 'Barangay 1', '2024-03-21'),
+(17, 'Kristoff Rivera', 'Barangay 2', '2024-03-23'),
+(18, 'Jasmine Uy', 'Barangay 3', '2024-03-24'),
+(19, 'Emmanuel Tan', 'Barangay 4', '2024-03-26'),
+(20, 'Hannah Perez', 'Barangay 5', '2024-03-29');
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_category_demand`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_category_demand` (
+`category_name` varchar(100)
+,`borrow_count` bigint(21)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_most_borrowed`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_most_borrowed` (
+`title` varchar(255)
+,`category_name` varchar(100)
+,`total_borrowed` bigint(21)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_overdue_members`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_overdue_members` (
+`full_name` varchar(150)
+,`title` varchar(255)
+,`due_date` date
+);
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_category_demand`
+--
+DROP TABLE IF EXISTS `v_category_demand`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_category_demand`  AS SELECT `c`.`category_name` AS `category_name`, count(`br`.`borrow_id`) AS `borrow_count` FROM ((`borrowings` `br` join `books` `b` on(`br`.`book_id` = `b`.`book_id`)) join `categories` `c` on(`b`.`category_id` = `c`.`category_id`)) GROUP BY `c`.`category_id` ORDER BY count(`br`.`borrow_id`) DESC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_most_borrowed`
+--
+DROP TABLE IF EXISTS `v_most_borrowed`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_most_borrowed`  AS SELECT `b`.`title` AS `title`, `c`.`category_name` AS `category_name`, count(0) AS `total_borrowed` FROM ((`borrowings` `br` join `books` `b` on(`br`.`book_id` = `b`.`book_id`)) join `categories` `c` on(`b`.`category_id` = `c`.`category_id`)) GROUP BY `br`.`book_id` ORDER BY count(0) DESC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_overdue_members`
+--
+DROP TABLE IF EXISTS `v_overdue_members`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_overdue_members`  AS SELECT `m`.`full_name` AS `full_name`, `b`.`title` AS `title`, `br`.`due_date` AS `due_date` FROM ((`borrowings` `br` join `members` `m` on(`br`.`member_id` = `m`.`member_id`)) join `books` `b` on(`br`.`book_id` = `b`.`book_id`)) WHERE `br`.`date_returned` is null AND `br`.`due_date` < curdate() ;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `books`
+--
+ALTER TABLE `books`
+  ADD PRIMARY KEY (`book_id`),
+  ADD UNIQUE KEY `isbn` (`isbn`),
+  ADD KEY `category_id` (`category_id`);
+
+--
+-- Indexes for table `borrowings`
+--
+ALTER TABLE `borrowings`
+  ADD PRIMARY KEY (`borrow_id`),
+  ADD KEY `member_id` (`member_id`),
+  ADD KEY `book_id` (`book_id`);
+
+--
+-- Indexes for table `categories`
+--
+ALTER TABLE `categories`
+  ADD PRIMARY KEY (`category_id`),
+  ADD UNIQUE KEY `category_name` (`category_name`);
+
+--
+-- Indexes for table `inventory`
+--
+ALTER TABLE `inventory`
+  ADD PRIMARY KEY (`inventory_id`),
+  ADD KEY `book_id` (`book_id`);
+
+--
+-- Indexes for table `members`
+--
+ALTER TABLE `members`
+  ADD PRIMARY KEY (`member_id`);
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `books`
+--
+ALTER TABLE `books`
+  ADD CONSTRAINT `books_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`);
+
+--
+-- Constraints for table `borrowings`
+--
+ALTER TABLE `borrowings`
+  ADD CONSTRAINT `borrowings_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `members` (`member_id`),
+  ADD CONSTRAINT `borrowings_ibfk_2` FOREIGN KEY (`book_id`) REFERENCES `books` (`book_id`);
+
+--
+-- Constraints for table `inventory`
+--
+ALTER TABLE `inventory`
+  ADD CONSTRAINT `inventory_ibfk_1` FOREIGN KEY (`book_id`) REFERENCES `books` (`book_id`);
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
